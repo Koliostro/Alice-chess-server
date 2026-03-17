@@ -55,7 +55,37 @@ func (self *Handler) GetGame(context *echo.Context) error {
 }
 
 func (self *Handler) GetMain(context *echo.Context) error {
-	return context.Render(http.StatusOK, "main.html", nil)
+	if !self.checkIfAuthorised(context) {
+		return context.Render(http.StatusOK, "main.html", map[string]string{
+			"username": "Not logged",
+		})
+	}
+
+	RawCookie, err := cookies.ReadCookie(context, "session_id")
+
+	if err != nil {
+		return context.Render(http.StatusOK, "main.html", map[string]string{
+			"username": "Not logged",
+		})
+	}
+
+	ByteCookie, err := cookies.DecodeBase64(RawCookie.Value)
+
+	if err != nil {
+		return context.NoContent(http.StatusInternalServerError)
+	}
+
+	var ReadSessionCookie SessionCookie
+
+	err = json.Unmarshal(ByteCookie, &ReadSessionCookie)
+
+	if err != nil {
+		return context.NoContent(http.StatusInternalServerError)
+	}
+
+	return context.Render(http.StatusOK, "main.html", map[string]string{
+		"username": ReadSessionCookie.Username,
+	})
 }
 
 func (self *Handler) generateSessionId(username string) string {
@@ -84,9 +114,6 @@ func (self *Handler) checkIfAuthorised(context *echo.Context) bool {
 	}
 
 	user := database.Find_user(self.DB, SessionCookie.Username)
-
-	log.Println(SessionCookie.Username)
-	log.Println(*user)
 
 	if user.Session_id != SessionCookie.Session_id {
 		return false
@@ -121,6 +148,7 @@ func (self *Handler) PostReg(context *echo.Context) error {
 	Cookie := SessionCookie{
 		Session_id: user.Session_id,
 		Username:   user.Nick,
+		IsLogged:   true,
 	}
 
 	byteCookie, err := json.Marshal(Cookie)
