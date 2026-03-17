@@ -39,6 +39,9 @@ func main() {
 	echoObj.GET("/register", handObj.GetReg)
 	echoObj.POST("/register", handObj.PostReg)
 
+	echoObj.GET("/login", handObj.NotImplemented)
+	echoObj.POST("/login", handObj.NotImplemented)
+
 	echoObj.Static("/static", "./static")
 
 	if err := echoObj.Start(":1323"); err != nil {
