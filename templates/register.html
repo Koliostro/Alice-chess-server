@@ -7,28 +7,20 @@
     <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body>
-    <form method="post" class="form">
-        <div class="flex-block flex-block_all-center flex-block_vertical form__title">
-            <label class="form__title" for="login">Login</label>
-            <label class="form__title" for="passw">Password</label>
-            <label class="form__title" for="passw_rep">Password repeat</label>
-        </div>
-        <div class="flex-block flex-block_all-center flex-block_vertical form__input_no-border">
+    <form method="post" class="form flex-block flex-block_vertical flex-block_all-center">
             {{ if .log }}
-            <input type="text" name="login" id="login" class="form__input text">
+            <input placeholder="Login" type="text" name="login" id="login" class="form__input text">
             {{ else }}
-            <input type="text" name="login" id="login" class="form__input_error form__input text">
+            <input placeholder="Login" type="text" name="login" id="login" class="form__input_error form__input text">
             {{ end }}
             {{ if .pass}}
-            <input type="password" name="passw" id="passw" class="form__input text">
-            <input type="password" name="passw_rep" id="passw_rep" class="form__input text">
+            <input placeholder="Password" type="password" name="passw" id="passw" class="form__input text">
+            <input placeholder="Password repeat" type="password" name="passw_rep" id="passw_rep" class="form__input text">
             {{ else }}
-            <input type="password" name="passw" id="passw" class="form__input_error form__input text">
-            <input type="password" name="passw_rep" id="passw_rep" class="form__input_error form__input text">
+            <input placeholder="Password" type="password" name="passw" id="passw" class="form__input_error form__input text">
+            <input placeholder="Password repeat" type="password" name="passw_rep" id="passw_rep" class="form__input_error form__input text">
             {{ end }}
-        </div>
-
-        <input type="submit" value="Send" class="text text_form form__input_send">
+        <input type="submit" value="Send" class="text form__input">
     </form>    
 </body>
 </html>

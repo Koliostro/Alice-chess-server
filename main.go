@@ -39,7 +39,7 @@ func main() {
 	echoObj.GET("/register", handObj.GetReg)
 	echoObj.POST("/register", handObj.PostReg)
 
-	echoObj.GET("/login", handObj.NotImplemented)
+	echoObj.GET("/login", handObj.GetLogin)
 	echoObj.POST("/login", handObj.NotImplemented)
 
 	echoObj.Static("/static", "./static")
@@ -47,4 +47,7 @@ func main() {
 	if err := echoObj.Start(":1323"); err != nil {
 		echoObj.Logger.Error("failed to start server", "error", err)
 	}
+
+	// TODO: After finishing auth system should start work
+	// 		 with websocket system for gameplay itself.
 }

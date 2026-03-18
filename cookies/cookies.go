@@ -8,6 +8,12 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+type SessionCookie struct {
+	Username   string `json:"Username"`
+	Session_id string `json:"Session_id"`
+	IsLogged   bool   `json:"IsLogged"`
+}
+
 func WriteCookie(name string, value string) *http.Cookie {
 	cookie := http.Cookie{
 		Name:     name,

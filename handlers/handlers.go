@@ -23,12 +23,6 @@ type Handler struct {
 	DB *gorm.DB
 }
 
-type SessionCookie struct {
-	Username   string `json:"Username"`
-	Session_id string `json:"Session_id"`
-	IsLogged   bool   `json:"IsLogged"`
-}
-
 func NewGenericHandler() (*Handler, error) {
 	db, err := database.Db_init()
 
@@ -40,14 +34,14 @@ func NewGenericHandler() (*Handler, error) {
 }
 
 func (self *Handler) GetReg(context *echo.Context) error {
-	if self.checkIfAuthorised(context) {
-		return context.Redirect(http.StatusFound, "/")
-	}
-
 	return context.Render(http.StatusOK, "register.html", map[string]bool{
 		"log":  true,
 		"pass": true,
 	})
+}
+
+func (self *Handler) GetLogin(context *echo.Context) error {
+	return context.Render(http.StatusOK, "login.html", nil)
 }
 
 func (self *Handler) GetGame(context *echo.Context) error {
@@ -75,7 +69,7 @@ func (self *Handler) GetMain(context *echo.Context) error {
 		return context.NoContent(http.StatusInternalServerError)
 	}
 
-	var ReadSessionCookie SessionCookie
+	var ReadSessionCookie cookies.SessionCookie
 
 	err = json.Unmarshal(ByteCookie, &ReadSessionCookie)
 
@@ -106,7 +100,7 @@ func (self *Handler) checkIfAuthorised(context *echo.Context) bool {
 		return false
 	}
 
-	var SessionCookie SessionCookie
+	var SessionCookie cookies.SessionCookie
 	err = json.Unmarshal([]byte(decodedCookie), &SessionCookie)
 
 	if err != nil {
@@ -142,10 +136,9 @@ func (self *Handler) PostReg(context *echo.Context) error {
 	user.Nick = username
 	user.Passw = password
 
-	// Generate session id
 	user.Session_id = self.generateSessionId(user.Nick)
 
-	Cookie := SessionCookie{
+	Cookie := cookies.SessionCookie{
 		Session_id: user.Session_id,
 		Username:   user.Nick,
 		IsLogged:   true,
