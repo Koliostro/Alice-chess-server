@@ -2,15 +2,12 @@ package handlers
 
 import (
 	"AliceChessServer/cookies"
+	"AliceChessServer/cookies/sessionCookie"
 	"AliceChessServer/database"
-	"AliceChessServer/database/database_errors"
-	"AliceChessServer/database/database_models"
 
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -33,17 +30,6 @@ func NewGenericHandler() (*Handler, error) {
 	return &Handler{DB: db}, nil
 }
 
-func (self *Handler) GetReg(context *echo.Context) error {
-	return context.Render(http.StatusOK, "register.html", map[string]bool{
-		"log":  true,
-		"pass": true,
-	})
-}
-
-func (self *Handler) GetLogin(context *echo.Context) error {
-	return context.Render(http.StatusOK, "login.html", nil)
-}
-
 func (self *Handler) GetGame(context *echo.Context) error {
 	return context.File("./templates/game.html")
 }
@@ -55,7 +41,9 @@ func (self *Handler) GetMain(context *echo.Context) error {
 		})
 	}
 
-	RawCookie, err := cookies.ReadCookie(context, "session_id")
+	SesCookie := cookies.NewSessionCookie()
+
+	RawCookie, err := SesCookie.ReadCookie(context, "session_id")
 
 	if err != nil {
 		return context.Render(http.StatusOK, "main.html", map[string]string{
@@ -63,22 +51,18 @@ func (self *Handler) GetMain(context *echo.Context) error {
 		})
 	}
 
-	ByteCookie, err := cookies.DecodeBase64(RawCookie.Value)
+	cookie, err := SesCookie.DecodeCookie(RawCookie)
 
-	if err != nil {
-		return context.NoContent(http.StatusInternalServerError)
-	}
+	var ReadCookie sessionCookie.SessionCookie
 
-	var ReadSessionCookie cookies.SessionCookie
-
-	err = json.Unmarshal(ByteCookie, &ReadSessionCookie)
+	err = json.Unmarshal(*cookie, &ReadCookie)
 
 	if err != nil {
 		return context.NoContent(http.StatusInternalServerError)
 	}
 
 	return context.Render(http.StatusOK, "main.html", map[string]string{
-		"username": ReadSessionCookie.Username,
+		"username": ReadCookie.Username,
 	})
 }
 
@@ -89,19 +73,23 @@ func (self *Handler) generateSessionId(username string) string {
 }
 
 func (self *Handler) checkIfAuthorised(context *echo.Context) bool {
-	res, err := cookies.ReadCookie(context, "session_id")
+	Cookie := cookies.NewSessionCookie()
+
+	rawCookie, err := Cookie.ReadCookie(context, sessionCookie.CookieName)
 
 	if err != nil {
 		return false
 	}
-	decodedCookie, err := cookies.DecodeBase64(res.Value)
+
+	var SessionCookie sessionCookie.SessionCookie
+
+	byteCookie, err := Cookie.DecodeCookie(rawCookie)
 
 	if err != nil {
 		return false
 	}
 
-	var SessionCookie cookies.SessionCookie
-	err = json.Unmarshal([]byte(decodedCookie), &SessionCookie)
+	err = json.Unmarshal(*byteCookie, &SessionCookie)
 
 	if err != nil {
 		return false
@@ -118,57 +106,6 @@ func (self *Handler) checkIfAuthorised(context *echo.Context) bool {
 	}
 
 	return false
-}
-
-func (self *Handler) PostReg(context *echo.Context) error {
-	var user database_models.PLAYERS
-
-	username := context.FormValue("login")
-	password := context.FormValue("passw")
-	password_rep := context.FormValue("passw_rep")
-
-	if password != password_rep {
-		return context.Render(http.StatusOK, "register.html", map[string]bool{
-			"log":  true,
-			"pass": false,
-		})
-	}
-	user.Nick = username
-	user.Passw = password
-
-	user.Session_id = self.generateSessionId(user.Nick)
-
-	Cookie := cookies.SessionCookie{
-		Session_id: user.Session_id,
-		Username:   user.Nick,
-		IsLogged:   true,
-	}
-
-	byteCookie, err := json.Marshal(Cookie)
-
-	if err != nil {
-		log.Println("JSON error: " + err.Error())
-		return context.NoContent(http.StatusInternalServerError)
-	}
-
-	cookie := cookies.WriteCookie("session_id", cookies.EncodeBase64(byteCookie))
-
-	err = database.Create_user(self.DB, &user)
-
-	if err != nil {
-		if errors.Is(err, database_errors.SQLErrObjDup) {
-			return context.Render(http.StatusOK, "register.html", map[string]bool{
-				"log":  false,
-				"pass": true,
-			})
-		} else {
-			return context.NoContent(http.StatusInternalServerError)
-		}
-	}
-
-	context.SetCookie(cookie)
-
-	return context.Redirect(http.StatusFound, "/")
 }
 
 func (self *Handler) NotImplemented(context *echo.Context) error {

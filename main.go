@@ -41,6 +41,7 @@ func main() {
 
 	echoObj.GET("/login", handObj.GetLogin)
 	echoObj.POST("/login", handObj.NotImplemented)
+	echoObj.POST("/login/logout", handObj.NotImplemented)
 
 	echoObj.Static("/static", "./static")
 

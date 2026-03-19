@@ -1,51 +1,24 @@
 package cookies
 
 import (
-	"encoding/base64"
+	"AliceChessServer/cookies/sessionCookie"
 	"net/http"
-	"time"
 
 	"github.com/labstack/echo/v5"
 )
 
-type SessionCookie struct {
-	Username   string `json:"Username"`
-	Session_id string `json:"Session_id"`
-	IsLogged   bool   `json:"IsLogged"`
+type GenericCookie interface {
+	WriteCookie(value *[]byte) *http.Cookie
+	ReadCookier(context *echo.Context) (*http.Cookie, error)
+	DecodeCookie(cookie *http.Cookie) (*[]byte, error)
 }
 
-func WriteCookie(name string, value string) *http.Cookie {
-	cookie := http.Cookie{
-		Name:     name,
-		Value:    value,
-		Path:     "/",
-		Expires:  time.Now().Add(24 * time.Hour),
-		HttpOnly: true,
+func NewSessionCookie() *sessionCookie.SessionCookie {
+	cookie := sessionCookie.SessionCookie{
+		Username:   "",
+		Session_id: "",
+		IsLogged:   false,
 	}
 
 	return &cookie
-}
-
-func ReadCookie(context *echo.Context, name string) (*http.Cookie, error) {
-	cookie, err := context.Cookie(name)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return cookie, nil
-}
-
-func EncodeBase64(value []byte) string {
-	return base64.StdEncoding.EncodeToString(value)
-}
-
-func DecodeBase64(value string) ([]byte, error) {
-	res, err := base64.StdEncoding.DecodeString(value)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
 }

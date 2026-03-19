@@ -12,5 +12,8 @@
         <input placeholder="Password" type="password" name="passw" id="" class="text form__input">
         <input type="submit" value="Log in" class="text form__input">
     </form>
+    {{ if .log }}
+    <a href="/login/logout">Log out</a>
+    {{ end }}
 </body>
 </html>
