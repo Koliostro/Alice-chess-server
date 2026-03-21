@@ -1,5 +1,15 @@
 package database_models
 
+import "time"
+
+type GameState string
+
+const (
+	ENDED    GameState = "ENDED"
+	WAITING  GameState = "WAITING"
+	PROGRESS GameState = "PROGRESS"
+)
+
 type PLAYERS struct {
 	Nick          string `gorm:"type:varchar(32);primaryKey;not null"`
 	Passw         string `gorm:"type:varchar(256);not null"`
@@ -8,3 +18,15 @@ type PLAYERS struct {
 	Session_id    string `gorm:"type:varchar(128)"`
 	IsAdmin       bool   `gorm:"default:false;not null"`
 }
+
+type GAMES struct {
+	ID         string    `gorm:"type:varchar(68);primaryKey;not null"`
+	Game_date  time.Time `gorm:"type:date;not null"`
+	State      GameState `gorm:"type:enum('ENDED', 'PROGRESS', 'WAITING'); not null"`
+	White_nick string    `gorm:"type:varchar(32), not null"`
+	Black_nick string    `gorm:"type:varchar(32), not null"`
+	Winner     string    `gorm:"type:varchar(32), not null"`
+}
+
+// TODO: * Declare un enumeration
+//		 * Create connections between tables

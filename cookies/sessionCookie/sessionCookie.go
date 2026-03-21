@@ -2,7 +2,6 @@ package sessionCookie
 
 import (
 	base64 "AliceChessServer/encoding"
-	"log"
 	"net/http"
 	"time"
 
@@ -26,13 +25,11 @@ func (self *SessionCookie) WriteCookie(value *[]byte) *http.Cookie {
 		HttpOnly: true,
 	}
 
-	log.Println("Value: " + httpCookie.Value)
-
 	return &httpCookie
 }
 
-func (self *SessionCookie) ReadCookie(context *echo.Context, name string) (*http.Cookie, error) {
-	cookie, err := context.Cookie(name)
+func (self *SessionCookie) ReadCookie(context *echo.Context) (*http.Cookie, error) {
+	cookie, err := context.Cookie(CookieName)
 
 	if err != nil {
 		return nil, err

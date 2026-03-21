@@ -30,10 +30,6 @@ func NewGenericHandler() (*Handler, error) {
 	return &Handler{DB: db}, nil
 }
 
-func (self *Handler) GetGame(context *echo.Context) error {
-	return context.File("./templates/game.html")
-}
-
 func (self *Handler) GetMain(context *echo.Context) error {
 	if !self.checkIfAuthorised(context) {
 		return context.Render(http.StatusOK, "main.html", map[string]string{
@@ -43,7 +39,7 @@ func (self *Handler) GetMain(context *echo.Context) error {
 
 	SesCookie := cookies.NewSessionCookie()
 
-	RawCookie, err := SesCookie.ReadCookie(context, "session_id")
+	RawCookie, err := SesCookie.ReadCookie(context)
 
 	if err != nil {
 		return context.Render(http.StatusOK, "main.html", map[string]string{
@@ -75,7 +71,7 @@ func (self *Handler) generateSessionId(username string) string {
 func (self *Handler) checkIfAuthorised(context *echo.Context) bool {
 	Cookie := cookies.NewSessionCookie()
 
-	rawCookie, err := Cookie.ReadCookie(context, sessionCookie.CookieName)
+	rawCookie, err := Cookie.ReadCookie(context)
 
 	if err != nil {
 		return false

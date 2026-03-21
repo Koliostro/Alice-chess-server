@@ -8,12 +8,17 @@
 </head>
 <body>
     <form action="" method="post" class="form flex-block flex-block_vertical flex-block_all-center">
+        {{ if .Notlog }}
+        <input placeholder="Login" type="text" name="login" id="" class="form__input_error form__input">
+        <input placeholder="Password" type="password" name="passw" id="" class="form__input_error text form__input">
+        {{ else }}
         <input placeholder="Login" type="text" name="login" id="" class="form__input">
         <input placeholder="Password" type="password" name="passw" id="" class="text form__input">
+        {{ end }}
         <input type="submit" value="Log in" class="text form__input">
     </form>
-    {{ if .log }}
-    <a href="/login/logout">Log out</a>
+    {{ if .logout }}
+    <a href="/auth/login/logout">Log out</a>
     {{ end }}
 </body>
 </html>

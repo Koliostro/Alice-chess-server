@@ -34,14 +34,21 @@ func main() {
 	echoObj.Renderer = renderObj
 
 	echoObj.GET("/", handObj.GetMain)
-	echoObj.GET("/game", handObj.GetGame)
 
-	echoObj.GET("/register", handObj.GetReg)
-	echoObj.POST("/register", handObj.PostReg)
+	authGroup := echoObj.Group("/auth")
 
-	echoObj.GET("/login", handObj.GetLogin)
-	echoObj.POST("/login", handObj.NotImplemented)
-	echoObj.POST("/login/logout", handObj.NotImplemented)
+	authGroup.GET("/register", handObj.GetReg)
+	authGroup.POST("/register", handObj.PostReg)
+	authGroup.GET("/login", handObj.GetLogin)
+	authGroup.GET("/login/logout", handObj.GetLogOut)
+	authGroup.POST("/login", handObj.PostLogin)
+
+	gameGroup := echoObj.Group("/games")
+
+	gameGroup.GET("/connectionMenu", handObj.GetConnectionMenu)
+	gameGroup.POST("/closeGame/:id", handObj.PostCloseGame)
+	gameGroup.GET("/createGame", handObj.GetCreateRoom)
+	gameGroup.GET("/waiting/:id", handObj.GetwaitingRoom)
 
 	echoObj.Static("/static", "./static")
 

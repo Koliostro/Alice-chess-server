@@ -12,23 +12,26 @@ import (
 	"gorm.io/gorm"
 )
 
-const dsn string = "ChessServer:1212@tcp(127.0.0.1:3306)/CHESS"
+const dsn string = "ChessServer:1212@tcp(127.0.0.1:3306)/CHESS?parseTime=true"
+
+func createSQLERrorHandler(res *gorm.DB) error {
+	var mysqlErr *offSql.MySQLError
+	mysqlErr = res.Error.(*offSql.MySQLError)
+	switch mysqlErr.Number {
+	case 1062:
+		log.Println(uint16(mysqlErr.Number))
+		return database_errors.SQLErrObjDup
+	default:
+		log.Println(strconv.FormatUint(uint64(mysqlErr.Number), 10))
+		return database_errors.SQLErrUnexp
+	}
+}
 
 func Create_user(db *gorm.DB, player *models.PLAYERS) error {
 	res := db.Create(player)
 
 	if res.Error != nil {
-		var mysqlErr *offSql.MySQLError
-		mysqlErr = res.Error.(*offSql.MySQLError)
-
-		switch mysqlErr.Number {
-		case 1062:
-			log.Println(uint16(mysqlErr.Number))
-			return database_errors.SQLErrObjDup
-		default:
-			log.Println(strconv.FormatUint(uint64(mysqlErr.Number), 10))
-			return database_errors.SQLErrUnexp
-		}
+		return createSQLERrorHandler(res)
 	}
 
 	log.Println("Created user")
@@ -45,14 +48,14 @@ func Find_user(db *gorm.DB, username string) *models.PLAYERS {
 	return &PLAYER
 }
 
-func Upd_usr_passw(db *gorm.DB, player *models.PLAYERS, value string) error {
-	res := db.Model(player).Update("Passw", value)
+func UpdSessionId(db *gorm.DB, player *models.PLAYERS, value string) error {
+	res := db.Model(player).Update("session_id", value)
 
 	if res.Error != nil {
 		return res.Error
 	}
 
-	log.Println("Updated  user")
+	log.Println("Updated  user's session_id")
 
 	return nil
 }
