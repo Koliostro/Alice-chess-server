@@ -8,16 +8,18 @@
 <body>
     <p class="text text_bold">WAITING ROOM</p> 
     <p class="text">Hello {{.id}}</p>
+    <a href="/games/connectionMenu" class="text">Cancel</a>
 
     <script>
         const parsedURL = new URL(window.location.href);
 
         const replay = parsedURL.pathname.replace("waiting", "closeGame")
 
-        console.log(replay)
-        window.addEventListener("pagehide", () => {
-            navigator.sendBeacon(replay, "")
-        }
+        window.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "hidden") {
+                navigator.sendBeacon(replay)
+            }
+        })
     </script>
 </body>
 </html>

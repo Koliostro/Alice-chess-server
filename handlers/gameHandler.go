@@ -6,6 +6,7 @@ import (
 	"AliceChessServer/database/database_models"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v5"
@@ -77,11 +78,27 @@ func (self *Handler) GetConnectionMenu(context *echo.Context) error {
 		counter = i
 	}
 
-	Data.Title = buffer[:counter+1]
+	counter += 1
+
+	if counter > 1 {
+		Data.Title = buffer[:counter]
+	} else {
+		Data.Title = nil
+	}
 
 	return context.Render(http.StatusOK, "connectionMenu.html", Data)
 }
 
 func (self *Handler) PostCloseGame(context *echo.Context) error {
-	return context.String(http.StatusOK, context.Param("id"))
+	id := context.Param("id")
+
+	clearedId := strings.TrimRight(id, "/")
+
+	res := database.DeleteGame(self.DB, clearedId)
+
+	if res != nil {
+		return context.NoContent(http.StatusInternalServerError)
+	}
+
+	return nil
 }
