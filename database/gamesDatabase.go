@@ -25,6 +25,19 @@ func GetSelectedGames(db *gorm.DB, state models.GameState) *[]database_models.GA
 	return &GAME
 }
 
+func GetGameById(db *gorm.DB, id string) (*models.GAMES, error) {
+	GAME := models.GAMES{
+		ID: id,
+	}
+	res := db.First(&GAME)
+
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	return &GAME, nil
+}
+
 func DeleteGame(db *gorm.DB, id string) error {
 	GAME := models.GAMES{
 		ID: id,

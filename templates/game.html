@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Alice`s chess</title>
-    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 
 <body>
@@ -14,7 +14,25 @@
             <div class="board rightBoard"></div>
         </div>
     </div>
-    <script type="module" src="../static/chessJS/index.js"></script>
+    <script>
+        // TODO: Don't work! For some reason. 
+        const LINK = "ws:/192.168.0.18:1323/games/connect/{{.URL}}"
+        const ws = new WebSocket(LINK)
+
+        ws.onopen = function() {
+            console.log("Connected to the server")
+        } 
+
+        ws.onmessage = function(event) {
+            console.log("Mesage: ", event.data)
+        }
+
+        ws.onclose = function() {
+            console.log("Disconnected")
+        }
+    </script>
+
+    <script type="module" src="/static/chessJS/index.js"></script>
 </body>
 
 </html>

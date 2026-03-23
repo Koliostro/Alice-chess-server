@@ -8,10 +8,10 @@
 <body>
     <main class="main">
         <a href="/games/createGame" class="text link">Create</a>
-        {{ range .Title }}
+        {{ range $index, $Title := .Title }}
         <section class="flex-block">
-            <a href="/games/{{.}}" class="game-card">
-                <h3 class="text text_title">{{.}}'s game</h3>
+            <a href="/games/connect/{{index $.Path $index}}" class="game-card">
+                <h3 class="text text_title">{{$Title}}'s game</h3>
             </a>
         </section>
         {{ else }}

@@ -4,6 +4,7 @@ go 1.25.0
 
 require (
 	github.com/go-sql-driver/mysql v1.8.1
+	github.com/gorilla/websocket v1.5.3
 	github.com/labstack/echo/v5 v5.0.4
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/gorm v1.31.1

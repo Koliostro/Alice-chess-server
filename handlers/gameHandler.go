@@ -5,16 +5,23 @@ import (
 	"AliceChessServer/database"
 	"AliceChessServer/database/database_models"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v5"
 )
 
 type ConnectMenuData struct {
 	Title []string
+	Path  []string
 }
+
+var (
+	upgrader = websocket.Upgrader{}
+)
 
 func (self *Handler) GetCreateRoom(context *echo.Context) error {
 	Cookie := cookies.NewSessionCookie()
@@ -38,7 +45,7 @@ func (self *Handler) GetCreateRoom(context *echo.Context) error {
 	}
 
 	gameObj := database_models.GAMES{
-		ID:         Cookie.Username,
+		ID:         self.generateSessionId(Cookie.Username),
 		Game_date:  time.Now(),
 		State:      database_models.WAITING,
 		White_nick: Cookie.Username,
@@ -56,8 +63,14 @@ func (self *Handler) GetCreateRoom(context *echo.Context) error {
 }
 
 func (self *Handler) GetwaitingRoom(context *echo.Context) error {
+	res, err := database.GetGameById(self.DB, context.Param("id"))
+
+	if err != nil {
+		return context.NoContent(http.StatusInternalServerError)
+	}
+
 	return context.Render(http.StatusOK, "waitingRoom.html", map[string]string{
-		"id": context.Param("id"),
+		"id": res.White_nick,
 	})
 }
 
@@ -65,7 +78,8 @@ func (self *Handler) GetConnectionMenu(context *echo.Context) error {
 	var DBData []database_models.GAMES
 	var Data ConnectMenuData
 
-	var buffer []string = make([]string, 10)
+	var bufferLink []string = make([]string, 10)
+	var bufferTitle []string = make([]string, 10)
 
 	DBData = *database.GetSelectedGames(self.DB, database_models.WAITING)
 
@@ -74,16 +88,17 @@ func (self *Handler) GetConnectionMenu(context *echo.Context) error {
 		if i == 2 {
 			break
 		}
-		buffer[i] = DBData[i].ID
+		bufferLink[i] = DBData[i].ID
+		bufferTitle[i] = DBData[i].White_nick
 		counter = i
 	}
 
-	counter += 1
-
-	if counter > 1 {
-		Data.Title = buffer[:counter]
+	if len(DBData) > 0 {
+		Data.Title = bufferTitle[:counter+1]
+		Data.Path = bufferLink[:counter+1]
 	} else {
 		Data.Title = nil
+		Data.Path = nil
 	}
 
 	return context.Render(http.StatusOK, "connectionMenu.html", Data)
@@ -101,4 +116,32 @@ func (self *Handler) PostCloseGame(context *echo.Context) error {
 	}
 
 	return nil
+}
+
+func (self *Handler) GetConnect(context *echo.Context) error {
+	return context.Render(http.StatusOK, "game.html", map[string]string{
+		"URL": context.Param("id"),
+	})
+}
+
+func (self *Handler) WSConnection(context *echo.Context) error {
+	ws, err := upgrader.Upgrade(context.Response(), context.Request(), nil)
+	if err != nil {
+		return err
+	}
+	defer ws.Close()
+
+	for {
+		err := ws.WriteMessage(websocket.TextMessage, []byte("Hello"))
+		if err != nil {
+			context.Logger().Error("Failed to write WS message", "error", err)
+		}
+
+		_, msg, err := ws.ReadMessage()
+		if err != nil {
+			context.Logger().Error("Failed to read WS message", "error", err)
+		}
+
+		log.Println(string(msg))
+	}
 }
