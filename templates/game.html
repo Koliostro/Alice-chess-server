@@ -15,12 +15,17 @@
         </div>
     </div>
     <script>
-        // TODO: Don't work! For some reason. 
-        const LINK = "ws:/192.168.0.18:1323/games/connect/{{.URL}}"
-        const ws = new WebSocket(LINK)
+        const LINK = "ws:/" + window.location.host + "/games/ws"
+//        const ws = new WebSocket(LINK)
+/*
+        let counter = 0;
 
         ws.onopen = function() {
             console.log("Connected to the server")
+            
+            setInterval(() => {
+                ws.send("PING")
+            }, 4000)
         } 
 
         ws.onmessage = function(event) {
@@ -30,9 +35,10 @@
         ws.onclose = function() {
             console.log("Disconnected")
         }
+        */
     </script>
 
-    <script type="module" src="/static/chessJS/index.js"></script>
+    <script type="module" src="/static/chessJS/game.js"></script>
 </body>
 
 </html>

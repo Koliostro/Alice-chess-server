@@ -20,8 +20,38 @@ type ConnectMenuData struct {
 }
 
 var (
-	upgrader = websocket.Upgrader{}
+	upgrader = websocket.Upgrader{
+		CheckOrigin: checkWSOrigin,
+	}
 )
+
+func checkWSOrigin(request *http.Request) bool {
+	Cookie := cookies.NewSessionCookie()
+
+	httpCookie, err := request.Cookie("session_id")
+
+	if err != nil {
+		return false
+	}
+
+	res, err := Cookie.DecodeCookie(httpCookie)
+
+	if err != nil {
+		return false
+	}
+
+	err = json.Unmarshal(*res, &Cookie)
+
+	if err != nil {
+		return false
+	}
+
+	if Cookie.IsLogged {
+		return true
+	}
+
+	return false
+}
 
 func (self *Handler) GetCreateRoom(context *echo.Context) error {
 	Cookie := cookies.NewSessionCookie()
@@ -109,6 +139,8 @@ func (self *Handler) PostCloseGame(context *echo.Context) error {
 
 	clearedId := strings.TrimRight(id, "/")
 
+	// TODO: Create origin testing for request, so peoples from outside
+	//		 cannot delete created games.
 	res := database.DeleteGame(self.DB, clearedId)
 
 	if res != nil {
@@ -125,23 +157,38 @@ func (self *Handler) GetConnect(context *echo.Context) error {
 }
 
 func (self *Handler) WSConnection(context *echo.Context) error {
+	type MESSAGE struct {
+		Iterations uint
+		Content    string
+	}
+
 	ws, err := upgrader.Upgrade(context.Response(), context.Request(), nil)
 	if err != nil {
 		return err
 	}
 	defer ws.Close()
 
-	for {
-		err := ws.WriteMessage(websocket.TextMessage, []byte("Hello"))
-		if err != nil {
-			context.Logger().Error("Failed to write WS message", "error", err)
-		}
+	var decodedMSG MESSAGE
 
+	for {
 		_, msg, err := ws.ReadMessage()
 		if err != nil {
 			context.Logger().Error("Failed to read WS message", "error", err)
 		}
 
-		log.Println(string(msg))
+		json.Unmarshal(msg, &decodedMSG)
+
+		log.Print(decodedMSG.Content)
+
+		if decodedMSG.Content == "END" {
+			ws.Close()
+			return nil
+		}
+
+		err = ws.WriteMessage(websocket.TextMessage, []byte("PONG"))
+
+		if err != nil {
+			log.Println("Writing WS error")
+		}
 	}
 }

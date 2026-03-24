@@ -43,7 +43,7 @@ func DeleteGame(db *gorm.DB, id string) error {
 		ID: id,
 	}
 
-	res := db.Delete(GAME)
+	res := db.Delete(&GAME)
 
 	return res.Error
 }
