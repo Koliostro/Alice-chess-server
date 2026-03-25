@@ -50,7 +50,6 @@ func main() {
 	gameGroup.GET("/createGame", handObj.GetCreateRoom)
 	gameGroup.GET("/waiting/:id", handObj.GetwaitingRoom)
 
-	gameGroup.GET("/connect/:id", handObj.GetConnect)
 	gameGroup.GET("/ws", handObj.WSConnection)
 
 	echoObj.Static("/static", "./static")

@@ -99,8 +99,8 @@ func (self *Handler) GetwaitingRoom(context *echo.Context) error {
 		return context.NoContent(http.StatusInternalServerError)
 	}
 
-	return context.Render(http.StatusOK, "waitingRoom.html", map[string]string{
-		"id": res.White_nick,
+	return context.Render(http.StatusOK, "game.html", map[string]string{
+		"URL": res.ID,
 	})
 }
 
@@ -139,8 +139,6 @@ func (self *Handler) PostCloseGame(context *echo.Context) error {
 
 	clearedId := strings.TrimRight(id, "/")
 
-	// TODO: Create origin testing for request, so peoples from outside
-	//		 cannot delete created games.
 	res := database.DeleteGame(self.DB, clearedId)
 
 	if res != nil {
@@ -150,16 +148,10 @@ func (self *Handler) PostCloseGame(context *echo.Context) error {
 	return nil
 }
 
-func (self *Handler) GetConnect(context *echo.Context) error {
-	return context.Render(http.StatusOK, "game.html", map[string]string{
-		"URL": context.Param("id"),
-	})
-}
-
 func (self *Handler) WSConnection(context *echo.Context) error {
 	type MESSAGE struct {
-		Iterations uint
-		Content    string
+		Header string `json:"header"`
+		Data   string `json:"data"`
 	}
 
 	ws, err := upgrader.Upgrade(context.Response(), context.Request(), nil)
@@ -168,27 +160,44 @@ func (self *Handler) WSConnection(context *echo.Context) error {
 	}
 	defer ws.Close()
 
-	var decodedMSG MESSAGE
+	Working := true
 
-	for {
-		_, msg, err := ws.ReadMessage()
+	var readMessage MESSAGE
+
+	for Working {
+		_, data, err := ws.ReadMessage()
+
 		if err != nil {
-			context.Logger().Error("Failed to read WS message", "error", err)
+			return err
 		}
 
-		json.Unmarshal(msg, &decodedMSG)
+		log.Println(string(data))
 
-		log.Print(decodedMSG.Content)
+		err = json.Unmarshal(data, &readMessage)
 
-		if decodedMSG.Content == "END" {
+		if err != nil {
+			log.Println("Json decode error: " + err.Error())
+		}
+
+		switch readMessage.Header {
+		case "END":
 			ws.Close()
-			return nil
-		}
+			Working = false
+		case "START":
+			newMessage := MESSAGE{
+				Header: "RECIVED",
+				Data:   "",
+			}
 
-		err = ws.WriteMessage(websocket.TextMessage, []byte("PONG"))
+			res, err := json.Marshal(&newMessage)
 
-		if err != nil {
-			log.Println("Writing WS error")
+			if err != nil {
+				log.Println("JSON encode error" + err.Error())
+			}
+
+			ws.WriteMessage(websocket.TextMessage, res)
 		}
 	}
+
+	return nil
 }
