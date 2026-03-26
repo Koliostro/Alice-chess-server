@@ -57,7 +57,4 @@ func main() {
 	if err := echoObj.Start(":1323"); err != nil {
 		echoObj.Logger.Error("failed to start server", "error", err)
 	}
-
-	// TODO: After finishing auth system should start work
-	// 		 with websocket system for gameplay itself.
 }

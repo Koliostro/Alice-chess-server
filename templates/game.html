@@ -16,26 +16,6 @@
     </div>
     <script>
         const LINK = "ws:/" + window.location.host + "/games/ws"
-//        const ws = new WebSocket(LINK)
-/*
-        let counter = 0;
-
-        ws.onopen = function() {
-            console.log("Connected to the server")
-            
-            setInterval(() => {
-                ws.send("PING")
-            }, 4000)
-        } 
-
-        ws.onmessage = function(event) {
-            console.log("Mesage: ", event.data)
-        }
-
-        ws.onclose = function() {
-            console.log("Disconnected")
-        }
-        */
     </script>
 
     <script type="module" src="/static/chessJS/game.js"></script>

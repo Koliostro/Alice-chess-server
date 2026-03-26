@@ -162,7 +162,7 @@ func (self *Handler) WSConnection(context *echo.Context) error {
 
 	Working := true
 
-	var readMessage MESSAGE
+	var readMessage, newMessage MESSAGE
 
 	for Working {
 		_, data, err := ws.ReadMessage()
@@ -184,10 +184,19 @@ func (self *Handler) WSConnection(context *echo.Context) error {
 			ws.Close()
 			Working = false
 		case "START":
-			newMessage := MESSAGE{
-				Header: "RECIVED",
-				Data:   "",
+			newMessage.Header = "RECIVED"
+			newMessage.Data = ""
+
+			res, err := json.Marshal(&newMessage)
+
+			if err != nil {
+				log.Println("JSON encode error" + err.Error())
 			}
+
+			ws.WriteMessage(websocket.TextMessage, res)
+		case "WAIT":
+			newMessage.Header = "SET"
+			newMessage.Data = "k7/8/8/8/8/8/8/8"
 
 			res, err := json.Marshal(&newMessage)
 
