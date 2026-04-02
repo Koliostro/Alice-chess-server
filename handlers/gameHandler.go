@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"AliceChessServer/atomicMap"
 	"AliceChessServer/cookies"
 	"AliceChessServer/database"
 	"AliceChessServer/database/database_models"
@@ -10,47 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v5"
 )
 
 type ConnectMenuData struct {
 	Title []string
 	Path  []string
-}
-
-var (
-	upgrader = websocket.Upgrader{
-		CheckOrigin: checkWSOrigin,
-	}
-)
-
-func checkWSOrigin(request *http.Request) bool {
-	Cookie := cookies.NewSessionCookie()
-
-	httpCookie, err := request.Cookie("session_id")
-
-	if err != nil {
-		return false
-	}
-
-	res, err := Cookie.DecodeCookie(httpCookie)
-
-	if err != nil {
-		return false
-	}
-
-	err = json.Unmarshal(*res, &Cookie)
-
-	if err != nil {
-		return false
-	}
-
-	if Cookie.IsLogged {
-		return true
-	}
-
-	return false
 }
 
 func (self *Handler) GetCreateRoom(context *echo.Context) error {
@@ -74,33 +40,69 @@ func (self *Handler) GetCreateRoom(context *echo.Context) error {
 		return context.NoContent(http.StatusInternalServerError)
 	}
 
-	gameObj := database_models.GAMES{
-		ID:         self.generateSessionId(Cookie.Username),
+	boardState := atomicMap.BoardState{
+		Left:  "8/8/8/8/8/8/8/7R",
+		Right: "8/8/8/8/8/8/8/6r1",
+	}
+
+	smallState := atomicMap.SmallState{
+		Board:     boardState,
+		IsReaded:  false,
+		IsUpdated: false,
+	}
+
+	initialState := atomicMap.GameState{
+		GameID:      self.generateSessionId(Cookie.Username),
+		WhitePlayer: Cookie.Username,
+		BlackPLayer: "",
+		State:       smallState,
+	}
+
+	newGame := database_models.GAMES{
+		ID:         initialState.GameID,
 		Game_date:  time.Now(),
 		State:      database_models.WAITING,
-		White_nick: Cookie.Username,
+		White_nick: initialState.WhitePlayer,
 		Black_nick: "",
 		Winner:     "",
 	}
 
-	err = database.CreateGame(self.DB, &gameObj)
+	err = database.CreateGame(self.DB, &newGame)
 
 	if err != nil {
 		return context.NoContent(http.StatusInternalServerError)
 	}
 
-	return context.Redirect(http.StatusFound, "/games/waiting/"+gameObj.ID)
+	//NOTE: I still doesn't know is my system for multythread writing are working but without testing
+	//		I don't get any answers.
+
+	self.Hub.Games[initialState.GameID] = &initialState
+
+	return context.Redirect(http.StatusFound, "/games/"+initialState.GameID)
+}
+
+func (self *Handler) GetGameState(context *echo.Context) error {
+	ID := context.Param("id")
+
+	item := self.Hub.Games[ID]
+
+	log.Print(item)
+
+	if item != nil {
+		item.State.IsReaded = true
+		state, err := json.Marshal(item.State)
+
+		if err != nil {
+			return context.NoContent(http.StatusInternalServerError)
+		}
+		return context.String(http.StatusOK, string(state))
+	}
+	return nil
 }
 
 func (self *Handler) GetwaitingRoom(context *echo.Context) error {
-	res, err := database.GetGameById(self.DB, context.Param("id"))
-
-	if err != nil {
-		return context.NoContent(http.StatusInternalServerError)
-	}
-
 	return context.Render(http.StatusOK, "game.html", map[string]string{
-		"URL": res.ID,
+		"URL": context.Param("id"),
 	})
 }
 
@@ -148,65 +150,21 @@ func (self *Handler) PostCloseGame(context *echo.Context) error {
 	return nil
 }
 
-func (self *Handler) WSConnection(context *echo.Context) error {
-	type MESSAGE struct {
-		Header string `json:"header"`
-		Data   string `json:"data"`
-	}
+// TODO: Not working. And I'm too exhosted for this.
+func (self *Handler) PostNewState(context *echo.Context) error {
+	var board atomicMap.BoardState
 
-	ws, err := upgrader.Upgrade(context.Response(), context.Request(), nil)
+	err := context.Bind(&board)
+
 	if err != nil {
-		return err
-	}
-	defer ws.Close()
-
-	Working := true
-
-	var readMessage, newMessage MESSAGE
-
-	for Working {
-		_, data, err := ws.ReadMessage()
-
-		if err != nil {
-			return err
-		}
-
-		log.Println(string(data))
-
-		err = json.Unmarshal(data, &readMessage)
-
-		if err != nil {
-			log.Println("Json decode error: " + err.Error())
-		}
-
-		switch readMessage.Header {
-		case "END":
-			ws.Close()
-			Working = false
-		case "START":
-			newMessage.Header = "RECIVED"
-			newMessage.Data = ""
-
-			res, err := json.Marshal(&newMessage)
-
-			if err != nil {
-				log.Println("JSON encode error" + err.Error())
-			}
-
-			ws.WriteMessage(websocket.TextMessage, res)
-		case "WAIT":
-			newMessage.Header = "SET"
-			newMessage.Data = "k7/8/8/8/8/8/8/8"
-
-			res, err := json.Marshal(&newMessage)
-
-			if err != nil {
-				log.Println("JSON encode error" + err.Error())
-			}
-
-			ws.WriteMessage(websocket.TextMessage, res)
-		}
+		return context.NoContent(http.StatusInternalServerError)
 	}
 
-	return nil
+	id := context.Param("id")
+
+	log.Println(board)
+
+	self.Hub.Games[id].State.Board = board
+
+	return context.NoContent(http.StatusOK)
 }

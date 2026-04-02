@@ -48,9 +48,10 @@ func main() {
 	gameGroup.GET("/connectionMenu", handObj.GetConnectionMenu)
 	gameGroup.POST("/closeGame/:id", handObj.PostCloseGame)
 	gameGroup.GET("/createGame", handObj.GetCreateRoom)
-	gameGroup.GET("/waiting/:id", handObj.GetwaitingRoom)
-
-	gameGroup.GET("/ws", handObj.WSConnection)
+	gameGroup.GET("/connect/:id", handObj.NotImplemented)
+	gameGroup.GET("/:id", handObj.GetwaitingRoom)
+	gameGroup.GET("/:id/getTurn", handObj.GetGameState)
+	gameGroup.POST("/:id/newState", handObj.PostNewState)
 
 	echoObj.Static("/static", "./static")
 

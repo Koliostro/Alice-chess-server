@@ -38,6 +38,11 @@ func GetGameById(db *gorm.DB, id string) (*models.GAMES, error) {
 	return &GAME, nil
 }
 
+func UpdateGameState(db *gorm.DB, game *models.GAMES, state string) error {
+	res := db.Model(game).Update("State", state)
+	return res.Error
+}
+
 func DeleteGame(db *gorm.DB, id string) error {
 	GAME := models.GAMES{
 		ID: id,
