@@ -3,6 +3,7 @@ package handlers
 import (
 	"AliceChessServer/atomicMap"
 	"AliceChessServer/cookies"
+	"AliceChessServer/cookies/sessionCookie"
 	"AliceChessServer/database"
 	"AliceChessServer/database/database_models"
 	"encoding/json"
@@ -41,8 +42,9 @@ func (self *Handler) GetCreateRoom(context *echo.Context) error {
 	}
 
 	boardState := atomicMap.BoardState{
-		Left:  "8/8/8/8/8/8/8/7R",
-		Right: "8/8/8/8/8/8/8/6r1",
+		IsWhiteTurn: true,
+		Left:        "BKNQP3/8/8/8/8/8/8/7R",
+		Right:       "8/8/8/8/8/8/8/6r1",
 	}
 
 	smallState := atomicMap.SmallState{
@@ -55,7 +57,7 @@ func (self *Handler) GetCreateRoom(context *echo.Context) error {
 		GameID:      self.generateSessionId(Cookie.Username),
 		WhitePlayer: Cookie.Username,
 		BlackPLayer: "",
-		State:       smallState,
+		State:       &smallState,
 	}
 
 	newGame := database_models.GAMES{
@@ -81,25 +83,6 @@ func (self *Handler) GetCreateRoom(context *echo.Context) error {
 	return context.Redirect(http.StatusFound, "/games/"+initialState.GameID)
 }
 
-func (self *Handler) GetGameState(context *echo.Context) error {
-	ID := context.Param("id")
-
-	item := self.Hub.Games[ID]
-
-	log.Print(item)
-
-	if item != nil {
-		item.State.IsReaded = true
-		state, err := json.Marshal(item.State)
-
-		if err != nil {
-			return context.NoContent(http.StatusInternalServerError)
-		}
-		return context.String(http.StatusOK, string(state))
-	}
-	return nil
-}
-
 func (self *Handler) GetwaitingRoom(context *echo.Context) error {
 	return context.Render(http.StatusOK, "game.html", map[string]string{
 		"URL": context.Param("id"),
@@ -112,6 +95,16 @@ func (self *Handler) GetConnectionMenu(context *echo.Context) error {
 
 	var bufferLink []string = make([]string, 10)
 	var bufferTitle []string = make([]string, 10)
+
+	DBData = *database.GetSelectedGames(self.DB, database_models.WAITING)
+
+	for i := 0; i < len(DBData); i++ {
+		err := self.Hub.Get(DBData[i].ID, &atomicMap.GameState{})
+
+		if err != nil {
+			database.DeleteGame(self.DB, DBData[i].ID)
+		}
+	}
 
 	DBData = *database.GetSelectedGames(self.DB, database_models.WAITING)
 
@@ -150,11 +143,18 @@ func (self *Handler) PostCloseGame(context *echo.Context) error {
 	return nil
 }
 
-// TODO: Not working. And I'm too exhosted for this.
 func (self *Handler) PostNewState(context *echo.Context) error {
 	var board atomicMap.BoardState
+	var item atomicMap.GameState
+	var sessionCookie sessionCookie.SessionCookie
+
+	sessionCookie = *cookies.NewSessionCookie()
 
 	err := context.Bind(&board)
+
+	httpCookie, err := sessionCookie.ReadCookie(context)
+	res, err := sessionCookie.DecodeCookie(httpCookie)
+	json.Unmarshal(*res, &sessionCookie)
 
 	if err != nil {
 		return context.NoContent(http.StatusInternalServerError)
@@ -164,7 +164,40 @@ func (self *Handler) PostNewState(context *echo.Context) error {
 
 	log.Println(board)
 
-	self.Hub.Games[id].State.Board = board
+	err = self.Hub.Get(id, &item)
+
+	if err != nil {
+		return context.NoContent(http.StatusBadRequest)
+	}
+
+	item.State.Write(&board)
 
 	return context.NoContent(http.StatusOK)
+}
+
+func (self *Handler) GetGameState(context *echo.Context) error {
+	var gettedState atomicMap.SmallState
+	var gettedGameState atomicMap.GameState
+
+	// NOTE: We presume that id is valid
+	ID := context.Param("id")
+
+	err := self.Hub.Get(ID, &gettedGameState)
+
+	if err != nil {
+		return context.String(http.StatusBadRequest, "")
+	}
+
+	gettedGameState.State.Read(&gettedState)
+
+	log.Print(gettedState.Board)
+
+	res, err := json.Marshal(gettedState.Board)
+
+	if err != nil {
+		return context.NoContent(http.StatusInternalServerError)
+	}
+
+	// NOTE: Return through STRING not JSON!!!!
+	return context.String(http.StatusOK, string(res))
 }

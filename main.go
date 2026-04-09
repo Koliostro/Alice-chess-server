@@ -4,6 +4,7 @@ import (
 	"AliceChessServer/handlers"
 	"html/template"
 	"io"
+	"log"
 
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -24,7 +25,7 @@ func main() {
 	handObj, err := handlers.NewGenericHandler()
 
 	if err != nil {
-		panic(err)
+		log.Fatal("Unnable to connect to DB")
 	}
 
 	renderObj := &TemplateRenderer{

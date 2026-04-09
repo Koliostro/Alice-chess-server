@@ -27,6 +27,3 @@ type GAMES struct {
 	Black_nick string    `gorm:"type:varchar(32), not null"`
 	Winner     string    `gorm:"type:varchar(32), not null"`
 }
-
-// TODO: * Declare un enumeration
-//		 * Create connections between tables
