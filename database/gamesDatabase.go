@@ -43,6 +43,16 @@ func UpdateGameState(db *gorm.DB, game *models.GAMES, state string) error {
 	return res.Error
 }
 
+func UpdateGamePlayer(db *gorm.DB, game *models.GAMES, nick string) error {
+	res := db.Model(game).Update("Black_nick", nick)
+	return res.Error
+}
+
+func UpdateGameTurns(db *gorm.DB, game *models.GAMES, Left string, Right string) error {
+	res := db.Model(game).Updates(models.GAMES{Last_turn_left: Left, Last_turn_right: Right})
+	return res.Error
+}
+
 func DeleteGame(db *gorm.DB, id string) error {
 	GAME := models.GAMES{
 		ID: id,

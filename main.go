@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"io"
 	"log"
+	"os"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -21,6 +23,17 @@ func (templRender *TemplateRenderer) Render(context *echo.Context, writer io.Wri
 func main() {
 	echoObj := echo.New()
 	echoObj.Use(middleware.RequestLogger())
+
+	FileLogger, err := os.OpenFile("worklog.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	defer FileLogger.Close()
+
+	log.SetOutput(FileLogger)
+
+	log.Printf("===[%v]===\n", time.Now())
 
 	handObj, err := handlers.NewGenericHandler()
 

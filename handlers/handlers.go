@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"AliceChessServer/atomicMap"
 	"AliceChessServer/cookies"
 	"AliceChessServer/cookies/sessionCookie"
 	"AliceChessServer/database"
@@ -18,19 +17,17 @@ import (
 )
 
 type Handler struct {
-	DB  *gorm.DB
-	Hub *atomicMap.Store
+	DB *gorm.DB
 }
 
 func NewGenericHandler() (*Handler, error) {
 	db, err := database.Db_init()
-	GameHub := atomicMap.NewStore()
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &Handler{DB: db, Hub: GameHub}, nil
+	return &Handler{DB: db}, nil
 }
 
 func (self *Handler) GetMain(context *echo.Context) error {
