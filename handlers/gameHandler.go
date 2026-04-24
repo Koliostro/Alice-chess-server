@@ -48,8 +48,8 @@ func (self *Handler) GetCreateRoom(context *echo.Context) error {
 		White_nick:      Cookie.Username,
 		Black_nick:      "",
 		Winner:          "",
-		Last_turn_right: "R7/8/8/8/8/8/8/8 w",
-		Last_turn_left:  "8/8/8/8/8/8/8/8 w",
+		Last_turn_right: "R7/8/8/8/8/8/8/8 w 1",
+		Last_turn_left:  "8/8/8/8/8/8/8/8 w 1",
 	}
 
 	err = database.CreateGame(self.DB, &newGame)
@@ -111,7 +111,7 @@ func (self *Handler) GetConnectionMenu(context *echo.Context) error {
 
 	counter := 0
 	for i := 0; i < len(DBData); i++ {
-		if i == 2 {
+		if i == 5 {
 			break
 		}
 		bufferLink[i] = DBData[i].ID
@@ -144,7 +144,6 @@ func (self *Handler) PostCloseGame(context *echo.Context) error {
 	return nil
 }
 
-// TODO: change
 func (self *Handler) PostNewState(context *echo.Context) error {
 	var board packet.BoardState
 	var sessionCookie sessionCookie.SessionCookie
@@ -162,8 +161,6 @@ func (self *Handler) PostNewState(context *echo.Context) error {
 	}
 
 	log.Printf("Getted packet : %v\n", board)
-
-	// TODO: Need to fix sending of new state.
 
 	ID := context.Param("id")
 
@@ -187,7 +184,6 @@ func (self *Handler) PostNewState(context *echo.Context) error {
 		}
 	}
 
-	// Do not work.
 	err = database.UpdateGameTurns(self.DB, game, board.Left, board.Right)
 
 	if err != nil {

@@ -8,9 +8,14 @@ type BoardState struct {
 }
 
 func (self *BoardState) SetWhichTurn() bool {
-	if string(self.Left[len(self.Left)-1]) == "w" {
-		return true
-	} else {
-		return false
+	for i := 0; i < len(string(self.Left)); i++ {
+		if string(self.Left[i]) == " " {
+			if string(self.Left[i+1]) == "w" {
+				return true
+			} else {
+				return false
+			}
+		}
 	}
+	return false
 }
