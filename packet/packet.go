@@ -1,6 +1,7 @@
 package packet
 
 type BoardState struct {
+	Header        string
 	IsYourTurn    bool
 	IsGameStarted bool
 	Left          string
@@ -12,8 +13,6 @@ func (self *BoardState) SetWhichTurn() bool {
 		if string(self.Left[i]) == " " {
 			if string(self.Left[i+1]) == "w" {
 				return true
-			} else {
-				return false
 			}
 		}
 	}

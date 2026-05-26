@@ -4,12 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Main</title>
+    <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body>
-    <a href="./auth/register">Register</a>
-    <a href="./games/connectionMenu">Game</a> 
-    <a href="./auth/login">Login</a>
-
-    <p>{{ .username }}</p>
+    <section class="background background_main-menu">
+        <main class="main flex-block_vertical">
+            <div class="menu">
+                <div class="main__mainMenu">
+                    <a class="menu__button" href="./auth/register"><p>Зарегистрироваться</p></a>
+                    <a class="menu__button" href="./auth/login"><p>Вход</p></a>
+                    <a class="menu__button" href="./games/connectionMenu"><p>Партии</p></a> 
+                    <p>{{ .username }}</p>
+                </div>
+            </div>
+        </main>
+    </section>
 </body>
 </html>

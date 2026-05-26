@@ -3,20 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/css/style.css">
     <title>Document</title>
 </head>
 <body>
-    <main class="main">
-        <a href="/games/createGame" class="text link">Create</a>
-        {{ range $index, $Title := .Title }}
-        <section class="flex-block">
-            <a href="/games/{{index $.Path $index}}" class="game-card">
-                <h3 class="text text_title">{{$Title}}'s game</h3>
-            </a>
-        </section>
-        {{ else }}
-        <p class="text text_bold">No rows</p>
-        {{ end }}
-    </main>
+    <section class="background background_main-menu">
+        <main class="main">
+            <div class="menu">
+                <div class="main__mainMenu flex-block_vertical">
+                    <a href="/games/createGame" class="text link menu__button">Создать</a>
+                    <div class="flex-block flex-block_wrap cards-collection">
+                        {{ range $index, $Title := .Title }}
+                        <section class="card-collection__element">
+                            <a href="/games/{{index $.Path $index}}" class="game-card">
+                                <h3 class="text text_title">Игра {{$Title}}</h3>
+                            </a>
+                        </section>
+                        {{ else }}
+                        <p class="text text_bold">Нет игр</p>
+                        {{ end }}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </section>
 </body>
 </html>

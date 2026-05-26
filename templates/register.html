@@ -7,20 +7,24 @@
     <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body>
-    <form method="post" class="form flex-block flex-block_vertical flex-block_all-center">
-            {{ if .log }}
-            <input placeholder="Login" type="text" name="login" id="login" class="form__input text">
-            {{ else }}
-            <input placeholder="Login" type="text" name="login" id="login" class="form__input_error form__input text">
-            {{ end }}
-            {{ if .pass}}
-            <input placeholder="Password" type="password" name="passw" id="passw" class="form__input text">
-            <input placeholder="Password repeat" type="password" name="passw_rep" id="passw_rep" class="form__input text">
-            {{ else }}
-            <input placeholder="Password" type="password" name="passw" id="passw" class="form__input_error form__input text">
-            <input placeholder="Password repeat" type="password" name="passw_rep" id="passw_rep" class="form__input_error form__input text">
-            {{ end }}
-        <input type="submit" value="Send" class="text form__input">
-    </form>    
+    <section class="background background_login">
+        <main class="main">
+            <form method="post" class="form menu flex-block flex-block_vertical flex-block_all-center">
+                {{ if .log }}
+                <input required placeholder="Логин" type="text" name="login" id="login" class="form__input text">
+                {{ else }}
+                <input required placeholder="Логин" type="text" name="login" id="login" class="form__input_error form__input text">
+                {{ end }}
+                {{ if .pass}}
+                <input required placeholder="Пароль" type="password" name="passw" id="passw" class="form__input text">
+                <input required placeholder="Повтор пароля" type="password" name="passw_rep" id="passw_rep" class="form__input text">
+                {{ else }}
+                <input required placeholder="Пароль" type="password" name="passw" id="passw" class="form__input_error form__input text">
+                <input required placeholder="Повтор пароля" type="password" name="passw_rep" id="passw_rep" class="form__input_error form__input text">
+                {{ end }}
+                <input type="submit" value="Зарегистрироваться" class="text form__input form__input_button">
+            </form>    
+        </main>
+    </section>
 </body>
 </html>

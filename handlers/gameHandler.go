@@ -26,7 +26,7 @@ func (self *Handler) GetCreateRoom(context *echo.Context) error {
 	rawCookie, err := Cookie.ReadCookie(context)
 
 	if err != nil {
-		return context.Redirect(http.StatusFound, "/login")
+		return context.Redirect(http.StatusFound, "/auth/login")
 	}
 
 	byteCookie, err := Cookie.DecodeCookie(rawCookie)
@@ -48,8 +48,8 @@ func (self *Handler) GetCreateRoom(context *echo.Context) error {
 		White_nick:      Cookie.Username,
 		Black_nick:      "",
 		Winner:          "",
-		Last_turn_right: "R7/8/8/8/8/8/8/8 w 1",
-		Last_turn_left:  "8/8/8/8/8/8/8/8 w 1",
+		Last_turn_right: "8/8/8/8/8/6q1/8/8 w 1",
+		Last_turn_left:  "rnb1kbnr/pppppppp/8/8/8/8/PPPPP2P/RNBQKBNR w 1",
 	}
 
 	err = database.CreateGame(self.DB, &newGame)
@@ -193,6 +193,20 @@ func (self *Handler) PostNewState(context *echo.Context) error {
 	newstate, _ := database.GetGameById(self.DB, ID)
 	log.Printf("New State : %v", newstate)
 
+	if board.Header == "END" {
+		if game.Winner == "" {
+			game.Winner = sessionCookie.Username
+		}
+
+		log.Printf("Winner = %v", sessionCookie.Username)
+
+		err := database.EndGame(self.DB, game, game.Winner, ID)
+
+		if err != nil {
+			return context.NoContent(http.StatusInternalServerError)
+		}
+	}
+
 	return context.NoContent(http.StatusOK)
 }
 
@@ -218,13 +232,13 @@ func (self *Handler) GetGameState(context *echo.Context) error {
 		return context.NoContent(http.StatusInternalServerError)
 	}
 
-	blackPlayer := game.Black_nick
-	whitePlayer := game.White_nick
-
 	// 1) Check if game is started
 	// 2) If started check who ask and which turn are now
 
 	var GamePacket packet.BoardState
+
+	blackPlayer := game.Black_nick
+	whitePlayer := game.White_nick
 
 	if whitePlayer == "" || blackPlayer == "" {
 		log.Println("White player are waiting")
@@ -260,6 +274,11 @@ func (self *Handler) GetGameState(context *echo.Context) error {
 		} else {
 			GamePacket.IsYourTurn = false
 		}
+	}
+
+	if game.State == database_models.ENDED {
+		GamePacket.Header = "END"
+		GamePacket.IsGameStarted = false
 	}
 
 	res, err := json.Marshal(GamePacket)

@@ -8,15 +8,26 @@
 </head>
 
 <body>
-    <main class="main">
-        <div class="curtain"></div>
-        <div class="flex-block flex-block_all-center">
-            <div class="boardPlace">
-                <div class="board leftBoard"></div>
-                <div class="board rightBoard"></div>
+    <div class="curtain"></div>
+    <section class="background background_game">
+        <main class="main">
+            <div class="flex-block flex-block_all-center">
+                <div class="boardPlace">
+                    <div class="board-border">
+                        <div class="board leftBoard"></div>
+                    </div>
+                    <div class="board-border">
+                        <div class="board rightBoard"></div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </main>
+            <dialog class="dialog" id="endGame" popover>
+                <h3 class="dialog__title">Game is end</h3>
+                <p class="dialog__text">WINNER</p>
+                <a href="/" class="dialog__button">HOME</a>
+            </dialog>
+        </main>
+    </section>
     <script>
         const LINK = "/games/{{.URL}}/getTurn"
     </script>
